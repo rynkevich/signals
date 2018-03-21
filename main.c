@@ -149,7 +149,7 @@ void signal_handler(int signo)
             /* block the process */
         }
         if (current_table_id != 1) {
-            confirm_termination(getpid(), getppid(),
+            confirm_termination(current_table_id, getpid(), getppid(),
                 sigusr1_sent, sigusr2_sent);
         }
         exit(0);
