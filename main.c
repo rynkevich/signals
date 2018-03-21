@@ -13,6 +13,8 @@
 #include "utils.h"
 #include "sigconfig.h"
 
+#define SIGUSR_HANDLER_SLEEP_TIME 100
+
 void init_sigcounters();
 void start_exchange();
 void signal_handler(int signo);
@@ -78,7 +80,7 @@ void start_exchange()
 
     struct sigaction handler;
     handler.sa_handler = &signal_handler;
-    sigemptyset(&handler.sa_mask);
+    sigfillset(&handler.sa_mask);
     handler.sa_flags = 0;
 
     int last_forked_child = 0;
@@ -91,8 +93,8 @@ void start_exchange()
 
         if (!child_pid) {
             current_table_id = last_forked_child;
-            last_forked_child = 0;
             pids[current_table_id - 1] = getpid();
+            last_forked_child = 0;
         } else {
             int gleader_pid;
             while (!(gleader_pid = pids[PROCESS_GROUPS[last_forked_child - 1] - 1])) {
@@ -100,8 +102,6 @@ void start_exchange()
             }
             if (setpgid(child_pid, gleader_pid) == -1) {
                 printerr(module, strerror(errno), "setpgid");
-                fprintf(stderr, "me: %d child: %d gleader: %d\n", current_table_id, last_forked_child, gleader_pid);
-                fprintf(stderr, "childpgid: %d\n", getpgid(child_pid));
                 exit(1);
             }
         }
@@ -124,7 +124,7 @@ void start_exchange()
         while (!is_forking_done(pids)) {
             /* block the process */
         }
-        int signal_to_send = GROUP_SIGNALS[current_table_id - 1];
+        int signal_to_send = GROUP_SIGNALS[RECEIVERS[current_table_id - 1] - 1];
         int receiver_pgid = pids[RECEIVERS[current_table_id - 1] - 1];
         if (kill(-receiver_pgid, signal_to_send) == -1) {
             printerr(module, strerror(errno), "kill");
@@ -149,7 +149,7 @@ void signal_handler(int signo)
             /* block the process */
         }
         if (current_table_id != 1) {
-            confirm_termination(pids[current_table_id - 1], getppid(),
+            confirm_termination(getpid(), getppid(),
                 sigusr1_sent, sigusr2_sent);
         }
         exit(0);
@@ -158,9 +158,13 @@ void signal_handler(int signo)
         confirm_signal(current_table_id, pids[current_table_id - 1], getppid(), true, signo == SIGUSR1 ? 1 : 2);
 
         if (current_table_id == 1 && received_total == RECEIVED_SIGS_CRITICAL) {
-            sleep(1);
+            usleep((SIGUSR_HANDLER_SLEEP_TIME + 10) * FORKS_NUM);
+            printf("\n");
             if (send_signal_to_children(SIGTERM, current_table_id) == -1) {
                 exit(1);
+            }
+            while (wait(NULL) != -1) {
+                /* block the process */
             }
             exit(0);
         }
@@ -170,7 +174,7 @@ void signal_handler(int signo)
             int receiver_pgid = pids[receiver_table_id - 1];
             int signal_to_send = GROUP_SIGNALS[receiver_table_id - 1];
 
-            usleep(100);
+            usleep(SIGUSR_HANDLER_SLEEP_TIME);
 
             if (kill(-receiver_pgid, signal_to_send) == -1) {
                 printerr(module, strerror(errno), "kill");
