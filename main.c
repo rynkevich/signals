@@ -23,8 +23,8 @@ bool is_forking_done(pid_t *pids);
 char *module;
 pid_t *pids;
 int current_table_id;
-struct sigcounter sigusr1_sent;
-struct sigcounter sigusr2_sent;
+int sigusr1_sent;
+int sigusr2_sent;
 int received_total;
 
 int main(int argc, char *argv[])
@@ -50,10 +50,8 @@ int main(int argc, char *argv[])
 
 void init_sigcounters()
 {
-    sigusr1_sent.signal = SIGUSR1;
-    sigusr1_sent.quantity = 0;
-    sigusr2_sent.signal = SIGUSR2;
-    sigusr2_sent.quantity = 0;
+    sigusr1_sent = 0;
+    sigusr2_sent = 0;
     received_total = 0;
 }
 
@@ -152,7 +150,7 @@ void signal_handler(int signo)
         }
         if (current_table_id != 1) {
             confirm_termination(pids[current_table_id - 1], getppid(),
-                2, &sigusr1_sent, &sigusr2_sent);
+                sigusr1_sent, sigusr2_sent);
         }
         exit(0);
     } else {
@@ -181,9 +179,9 @@ void signal_handler(int signo)
             confirm_signal(current_table_id, pids[current_table_id - 1],
                 getppid(), false, signal_to_send);
             if (signal_to_send == SIGUSR1) {
-                sigusr1_sent.quantity++;
+                sigusr1_sent++;
             } else {
-                sigusr2_sent.quantity++;
+                sigusr2_sent++;
             }
         }
     }
