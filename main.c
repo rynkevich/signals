@@ -131,7 +131,7 @@ void start_exchange()
             exit(1);
         }
         confirm_signal(current_table_id, pids[current_table_id - 1],
-            getppid(), false, signal_to_send);
+            getppid(), false, signal_to_send == SIGUSR1 ? 1 : 2);
     }
 
     while (true) {
@@ -155,7 +155,7 @@ void signal_handler(int signo)
         exit(0);
     } else {
         received_total++;
-        confirm_signal(current_table_id, pids[current_table_id - 1], getppid(), true, signo);
+        confirm_signal(current_table_id, pids[current_table_id - 1], getppid(), true, signo == SIGUSR1 ? 1 : 2);
 
         if (current_table_id == 1 && received_total == RECEIVED_SIGS_CRITICAL) {
             sleep(1);
@@ -177,7 +177,7 @@ void signal_handler(int signo)
                 exit(1);
             }
             confirm_signal(current_table_id, pids[current_table_id - 1],
-                getppid(), false, signal_to_send);
+                getppid(), false, signal_to_send == SIGUSR1 ? 1 : 2);
             if (signal_to_send == SIGUSR1) {
                 sigusr1_sent++;
             } else {
