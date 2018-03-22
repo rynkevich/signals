@@ -15,7 +15,6 @@
 
 #define SIGUSR_HANDLER_SLEEP_TIME 100
 
-void init_sigcounters();
 void start_exchange();
 void signal_handler(int signo);
 int send_signal_to_children(int signo, int table_id);
@@ -25,9 +24,9 @@ bool is_forking_done(pid_t *pids);
 char *module;
 pid_t *pids;
 int current_table_id;
-int sigusr1_sent;
-int sigusr2_sent;
-int received_total;
+int sigusr1_sent = 0;
+int sigusr2_sent = 0;
+int received_total = 0;
 
 int main(int argc, char *argv[])
 {
@@ -39,7 +38,6 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    init_sigcounters();
     start_exchange();
 
     if (munmap(pids, FORKS_NUM * sizeof(pid_t)) == -1) {
@@ -48,13 +46,6 @@ int main(int argc, char *argv[])
     }
 
     return 0;
-}
-
-void init_sigcounters()
-{
-    sigusr1_sent = 0;
-    sigusr2_sent = 0;
-    received_total = 0;
 }
 
 void start_exchange()
