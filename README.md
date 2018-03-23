@@ -8,9 +8,9 @@ N pid ppid has received/sent SIGUSR1/SIGUSR2 at (current time) ms
 N is the child index in table #1.
 After receiving 101st SIGUSR signal, process 1 sends SIGTERM to his children, then awaits their termination and terminates itself. Process 0 waits for process 1 termination and terminates itself as well. When receiving SIGTERM, children terminate themselves with the following output:
 ```
-pid ppid has terminated; SIGUSR1 sent: X, SIGUSR2 sent: Y
+N pid ppid has terminated; SIGUSR1 sent: X, SIGUSR2 sent: Y
 ```
-X and Y are total number of received SIGUSR1 and SIGUSR2 respectively.
+N is the child index in table #1, X and Y are total number of received SIGUSR1 and SIGUSR2 respectively.
 
 Tables #1/#2 entries for the implemented case:
 ```
