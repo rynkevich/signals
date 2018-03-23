@@ -11,7 +11,11 @@ long long get_time()
 
 void printerr(const char *module, const char *errmsg, const char *comment)
 {
-    fprintf(stderr, "%s: %s (%s)\n", module, errmsg, comment ? comment : "");
+    fprintf(stderr, "%s: %s ", module, errmsg);
+    if (comment) {
+        fprintf(stderr, "(%s)", comment);
+    }
+    fprintf(stderr, "\n");
 }
 
 void confirm_signal(int table_id, pid_t pid, pid_t ppid, bool has_received, int sigusrno)
